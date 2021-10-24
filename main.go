@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"go-soapauth/controller"
+	"go-soapentry/controller"
 	"log"
 	"os"
 
@@ -52,32 +52,15 @@ func main() {
 	errorLog := models.LogFile{Directory: os.Getenv("LOGLOCATION"), FileType: "Error"}
 	control := controller.Controller{DB: db, AccessLog: &accessLog,
 		ErrorLog: &errorLog}
-	userControl := controller.UserController{DB: db, AccessLog: &accessLog,
-		ErrorLog: &errorLog}
 
 	v1 := r.Group("/api/v1")
 	{
-		auth := v1.Group("/auth")
+		entries := v1.Group("/entries")
 		{
-			auth.POST("", control.Login)
-			auth.PUT("", control.RefreshToken)
-			auth.DELETE("", control.Logout)
-			auth.GET("verify/:token", control.VerifyEmailAddress)
-			auth.GET("remote/:token", control.ApproveRemote)
-			auth.PUT("password", control.ChangePassword)
-			auth.POST("forgot", control.ForgotPassword)
-			auth.PUT("forgot", control.ForgotPasswordChange)
-		}
-
-		user := auth.Group("/users")
-		{
-			user.GET("/:id", models.AuthorizeJWT(db, &errorLog), userControl.GetUser)
-			user.POST("/", userControl.AddUser)
-			user.PUT("/", models.AuthorizeJWT(db, &errorLog), userControl.UpdateUser)
-			user.DELETE("/:id", models.AuthorizeJWT(db, &errorLog),
-				userControl.DeleteUser)
+			entries.GET("/:id/*days", //models.AuthorizeJWT(db, &errorLog),
+				control.GetEntries)
 		}
 	}
 
-	r.Run(":6001")
+	r.Run(":6002")
 }
